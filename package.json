@@ -5,7 +5,8 @@
   "description": "Generate lyrics poster images using the Meting music API framework. Deployed on Cloudflare Pages.",
   "scripts": {
     "dev": "npx wrangler pages dev public --compatibility-flag=nodejs_compat --compatibility-date=2024-09-23",
-    "deploy": "npx wrangler pages deploy public --compatibility-flag=nodejs_compat --compatibility-date=2024-09-23"
+    "deploy": "npx wrangler pages deploy public --compatibility-flag=nodejs_compat --compatibility-date=2024-09-23",
+    "build": "echo 'Cloudflare Pages: npm install has already run, no additional build step needed'"
   },
   "dependencies": {
     "@meting/core": "^1.6.1"
