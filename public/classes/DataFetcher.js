@@ -87,7 +87,7 @@ class DataFetcher {
     /**
      * Fetches lyrics for a song.
      * @param {string} lyricId
-     * @returns {Promise<{lyric: string, tlyric: string}|null>}
+     * @returns {Promise<{lyric: string, tlyric: string, kana: string}|null>}
      */
     async getSongLyrics(lyricId) {
         const url =
@@ -100,6 +100,10 @@ class DataFetcher {
         }
         const data = await response.json();
         if (!data || (!data.lyric && !data.tlyric)) return null;
-        return { lyric: data.lyric || '', tlyric: data.tlyric || '' };
+        return {
+            lyric: data.lyric || '',
+            tlyric: data.tlyric || '',
+            kana: data.kana || '',
+        };
     }
 }
