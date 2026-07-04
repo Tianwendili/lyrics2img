@@ -1,0 +1,203 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+/* Fallback Asian Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+HK&family=Noto+Sans+JP&family=Noto+Sans+KR&family=Noto+Sans+SC&family=Noto+Sans+TC&display=swap');
+
+* {
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+
+    --background-color: rgba(246, 246, 246, 1);
+    --background-text-color: rgba(18, 55, 64, 1);
+    --surface-light-color: rgba(84, 154, 171, 0.1);
+    --surface-color: rgba(84, 154, 171, 0.3);
+    --surface-text-color: rgba(18, 55, 64, 0.85);
+    --primary-color: rgba(241, 128, 45, 1);
+    --primary-text-color: rgba(246, 246, 246, 1);
+    --error-color: rgba(240, 40, 30, 0.3);
+    --error-text-color: rgba(240, 40, 30, 1);
+
+    --cubic-ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+:lang(zh-TW):not(.material-symbols-outlined) {
+    font-family: "Poppins", "Noto Sans TC", sans-serif;
+}
+
+:lang(zh-CN):not(.material-symbols-outlined) {
+    font-family: "Poppins", "Noto Sans SC", sans-serif;
+}
+
+:lang(zh-HK):not(.material-symbols-outlined) {
+    font-family: "Poppins", "Noto Sans HK", sans-serif;
+}
+
+:lang(ja):not(.material-symbols-outlined) {
+    font-family: "Poppins", "Noto Sans JP", sans-serif;
+}
+
+:lang(ko):not(.material-symbols-outlined) {
+    font-family: "Poppins", "Noto Sans KR", sans-serif;
+}
+
+.dark-mode, .dark-mode * {
+    --background-color: rgba(20, 20, 20, 1);
+    --background-text-color: rgba(72, 220, 255, 0.8);
+    --surface-light-color: rgba(84, 154, 171, 0.1);
+    --surface-color: rgba(84, 154, 171, 0.25);
+    --surface-text-color: rgba(72, 220, 255, 0.7);
+    --primary-color: rgba(241, 128, 45, 0.95);
+    --primary-text-color: rgba(246, 246, 246, 1);
+    --error-color: rgba(240, 40, 30, 0.2);
+    --error-text-color: rgba(240, 40, 30, 1);
+}
+
+[contenteditable] {
+    outline: none;
+}
+
+.cloneable {
+    display: none!important;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    background: var(--background-color);
+    color: var(--background-text-color);
+}
+
+h1, h2 {
+    margin: 0;
+    padding: 1.5rem 0 1.1rem;
+    font-size: 1.6rem;
+}
+
+.surface {
+    background: var(--surface-color);
+    color: var(--surface-text-color);
+}
+
+.primary {
+    background: var(--primary-color);
+    color: var(--primary-text-color);
+}
+
+a {
+    text-decoration: none;
+    font-weight: 600;
+    color: inherit
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+header {
+    position: relative;
+}
+
+header > .go-to-screen, #download, #last-go-back {
+    position: absolute;
+    top: calc(50% + 0.2rem);
+    left: -1rem;
+    transform: translate(-100%, -50%);
+    border: 0;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    background-color: var(--surface-light-color);
+    color: var(--surface-text-color);
+    transition: 150ms var(--cubic-ease-out);
+}
+
+header > .go-to-screen.right, #download {
+    right: -1rem;
+    left: auto;
+    transform: translate(100%, -50%);
+}
+
+header > .go-to-screen:hover, #download:hover, #last-go-back:hover {
+    cursor: pointer;
+    background-color: var(--surface-color);
+}
+
+footer {
+    text-align: center;
+    padding: 2.1rem;
+    height: 8rem;
+    font-size: 1.2rem;
+}
+
+#dark-mode-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 600;
+    padding-top: 0.5rem;
+}
+
+#dark-mode-toggle:hover {
+    cursor: pointer;
+}
+
+#dark-mode-toggle::before {
+    content: "切换到深色";
+}
+
+.dark-mode #dark-mode-toggle::before {
+    content: "切换到浅色";
+}
+
+#dark-mode-toggle > span::after {
+    content: "dark_mode";
+}
+
+.dark-mode #dark-mode-toggle > span::after {
+    content: "light_mode";
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: var(--primary-text-color);
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 250ms var(--cubic-ease-out);
+    z-index: 100;
+}
+
+.fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.fab.hidden {
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;
+}
+
+.fab > span {
+    font-size: 1.5rem;
+}

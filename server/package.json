@@ -1,0 +1,18 @@
+{
+  "name": "lyrics2img-server",
+  "version": "1.0.0",
+  "description": "Local backend that wraps @meting/core for the lyrics2img frontend.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@meting/core": "^1.6.1",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "kuroshiro": "^1.2.0",
+    "kuroshiro-analyzer-kuromoji": "^1.1.0"
+  }
+}
