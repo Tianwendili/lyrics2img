@@ -561,7 +561,8 @@ class DOMHandler {
     }
 
     /**
-     * 调用后端 API 获取单行文本的假名注释（ruby HTML）
+     * 调用 kuroshiro（浏览器版）获取单行文本的假名注释（ruby HTML）。
+     * 词典通过 jsDelivr CDN 加载，无需后端。
      * @param {string} text
      * @returns {Promise<string>} 带 <ruby>/<rt> 标签的 HTML
      */
@@ -570,17 +571,49 @@ class DOMHandler {
             return this.furiganaCache.get(text);
         }
 
-        const url =
-            `${this.fetcher.apiBase}/api/furigana?text=${encodeURIComponent(text)}`;
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`furigana API failed: ${response.status}`);
-        }
-        const data = await response.json();
-        const html = data.html || text;
-        this.furiganaCache.set(text, html);
-        return html;
+        await DOMHandler.ensureKuroshiro();
+        const rawHtml = await DOMHandler.kuroshiro.convert(text, {
+            to: 'hiragana',
+            mode: 'furigana',
+        });
+        const cleanHtml = rawHtml.replace(/<rp>[^<]*<\/rp>/gi, '');
+        this.furiganaCache.set(text, cleanHtml);
+        return cleanHtml;
     }
+
+    /**
+     * 懒加载 kuroshiro + kuromoji（浏览器版，词典走 CDN）。
+     * 加载完成后缓存在类静态字段上，后续调用复用。
+     */
+    static async ensureKuroshiro() {
+        if (DOMHandler.kuroshiro) return;
+
+        if (!DOMHandler.kuroshiroInitPromise) {
+            DOMHandler.kuroshiroInitPromise = (async () => {
+                const Kuroshiro = (await import(
+                    'https://esm.sh/kuroshiro@1.4.0'
+                )).default;
+                const KuromojiAnalyzer = (await import(
+                    'https://esm.sh/kuroshiro-analyzer-kuromoji@1.1.0?deps=kuromoji@0.1.2'
+                )).default;
+
+                const analyzer = new KuromojiAnalyzer({
+                    dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/',
+                });
+
+                const kuroshiro = new Kuroshiro();
+                await kuroshiro.init(analyzer);
+                DOMHandler.kuroshiro = kuroshiro;
+            })();
+        }
+        await DOMHandler.kuroshiroInitPromise;
+    }
+
+    /** @type {any?} kuroshiro 实例（懒加载后填充） */
+    static kuroshiro = null;
+
+    /** @type {Promise<void>?} */
+    static kuroshiroInitPromise = null;
 
     /**
      * 下载海报

@@ -18,6 +18,7 @@ pnpm-debug.log*
 dist/
 build/
 *.log
+.wrangler/
 
 # ===== IDE / 编辑器 =====
 .vscode/
