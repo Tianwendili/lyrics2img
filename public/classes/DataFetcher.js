@@ -1,7 +1,7 @@
 class DataFetcher {
     constructor() {
         /** @type {string} current music platform */
-        this.server = 'netease';
+        this.server = 'tencent';
 
         /**
          * Backend base URL. Empty string means same-origin; override via

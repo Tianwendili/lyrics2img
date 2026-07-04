@@ -508,30 +508,60 @@ class DOMHandler {
         const song = this.songs[this.selectedSongIndex];
         const lyricsEl = document.querySelector(".song-image > .lyrics");
 
-        const lines = song.lyrics
-            ?.filter((_, index) => indexes.includes(index))
-            ?.map((lyric) => lyric.text);
+        const filtered = song.lyrics?.filter((_, index) =>
+            indexes.includes(index)
+        );
+        const lines = filtered?.map((lyric) => lyric.text);
 
         if (!lines || lines.length === 0) {
             lyricsEl.innerHTML = NO_LYRICS_SELECTED;
             return;
         }
 
-        if (this.furiganaEnabled) {
-            // 显示加载中
-            lyricsEl.innerHTML = FURIGANA_LOADING;
-            try {
-                const rubyLines = [];
-                for (const text of lines) {
-                    const ruby = await this.getFuriganaHtml(text);
-                    rubyLines.push(ruby);
-                }
-                lyricsEl.innerHTML = rubyLines.join("<br>");
-            } catch (err) {
-                console.error("furigana error:", err);
-                lyricsEl.innerHTML = lines.join("<br>");
+        if (!this.furiganaEnabled) {
+            lyricsEl.innerHTML = lines.join("<br>");
+            return;
+        }
+
+        // 优先用 QQ 音乐自带的 kana（同步，秒出）
+        if (song.kana) {
+            const rubyLines = [];
+            let globalKanjiIdx = 0;
+            // 先算出每行之前累计了多少汉字（全局偏移）
+            // filtered 只是选中的行，但 kana 是按全部歌词的顺序排列的
+            // 所以需要从全部歌词里数
+            const allLyrics = song.lyrics || [];
+            let kanjiOffset = 0;
+            const offsetMap = new Map(); // lyric index -> kanji count before this line
+            for (let i = 0; i < allLyrics.length; i++) {
+                offsetMap.set(i, kanjiOffset);
+                const { consumed } = song.applyKanaToText(allLyrics[i].text, 0);
+                kanjiOffset += consumed;
             }
-        } else {
+            for (let i = 0; i < filtered.length; i++) {
+                const originalIndex = indexes[i];
+                const offset = offsetMap.get(originalIndex) || 0;
+                const { html } = song.applyKanaToText(
+                    filtered[i].text,
+                    offset
+                );
+                rubyLines.push(html);
+            }
+            lyricsEl.innerHTML = rubyLines.join("<br>");
+            return;
+        }
+
+        // 降级：kuroshiro 客户端计算（异步，需加载 ~22MB 词典）
+        lyricsEl.innerHTML = FURIGANA_LOADING;
+        try {
+            const rubyLines = [];
+            for (const text of lines) {
+                const ruby = await this.getFuriganaHtml(text);
+                rubyLines.push(ruby);
+            }
+            lyricsEl.innerHTML = rubyLines.join("<br>");
+        } catch (err) {
+            console.error("furigana error:", err);
             lyricsEl.innerHTML = lines.join("<br>");
         }
     }
@@ -547,16 +577,43 @@ class DOMHandler {
         } else {
             body.classList.remove("furigana-on");
         }
-        // 如果当前在第 4 屏（海报页），实时刷新歌词
+
+        const song = this.songs[this.selectedSongIndex];
+        const hasNativeKana = song && song.kana;
+
+        // 只有当没有原生 kana 且 kuroshiro 还没加载时才显示加载提示
         if (
-            !document.querySelector(".final-options").classList.contains("hidden")
+            this.furiganaEnabled &&
+            !hasNativeKana &&
+            !DOMHandler.kuroshiro
         ) {
-            await this.setSongLyrics(
-                Array.from(document.querySelectorAll(".select-line.selected")).map(
-                    (el) => Number(el.dataset.index)
-                )
+            this.displaySearching("正在加载假名词典（约 22MB），请稍候...");
+        }
+
+        try {
+            // 如果当前在第 4 屏（海报页），实时刷新歌词
+            if (
+                !document.querySelector(".final-options").classList.contains("hidden")
+            ) {
+                await this.setSongLyrics(
+                    Array.from(document.querySelectorAll(".select-line.selected")).map(
+                        (el) => Number(el.dataset.index)
+                    )
+                );
+                this.setSongImageWidth(this.widthSlider.value);
+            }
+        } catch (err) {
+            console.error("假名注释加载失败:", err);
+            this.throwError(
+                `假名注释加载失败：${err.message}<br>请检查网络连接后重试。`
             );
-            this.setSongImageWidth(this.widthSlider.value);
+            // 失败时回退开关状态
+            this.furiganaEnabled = !this.furiganaEnabled;
+            body.classList.remove("furigana-on");
+        } finally {
+            if (!hasNativeKana && DOMHandler.kuroshiro) {
+                this.hideSearching();
+            }
         }
     }
 
@@ -591,7 +648,7 @@ class DOMHandler {
         if (!DOMHandler.kuroshiroInitPromise) {
             DOMHandler.kuroshiroInitPromise = (async () => {
                 const Kuroshiro = (await import(
-                    'https://esm.sh/kuroshiro@1.4.0'
+                    'https://esm.sh/kuroshiro@1.2.0'
                 )).default;
                 const KuromojiAnalyzer = (await import(
                     'https://esm.sh/kuroshiro-analyzer-kuromoji@1.1.0?deps=kuromoji@0.1.2'
